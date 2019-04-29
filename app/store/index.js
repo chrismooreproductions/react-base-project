@@ -1,19 +1,26 @@
 /* eslint-disable no-console */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable global-require */
-import { createStore } from 'redux';
+import { createStore, applyMiddleware, compose } from 'redux';
 import rootReducer from './rootReducer';
-import * as actionCreators from './actions';
 
 export default function configureStore(preloadedState) {
-  const enhancer = window.__REDUX_DEVTOOLS_EXTENSION__ &&
-    window.__REDUX_DEVTOOLS_EXTENSION__({ actionCreators, serialize: true, trace: true });
-  if (!enhancer) {
-    console.warn('Install Redux DevTools Extension to inspect the app state: '
-      + 'https://github.com/zalmoxisus/redux-devtools-extension#installation');
+  const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+  const middleware = [];
+
+  if (process.env.NODE_ENV === 'development') {
+    const { logger } = require('redux-logger');
+    middleware.push(logger);
   }
 
-  const store = createStore(rootReducer, preloadedState, enhancer);
+  const store = createStore(
+    rootReducer,
+    preloadedState,
+    composeEnhancers(
+      applyMiddleware(...middleware),
+    ),
+  );
 
   if (module.hot) {
     // Enable Webpack hot module replacement for reducers
